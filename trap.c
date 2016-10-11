@@ -78,6 +78,13 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  // CASE FOR OS PROJECT 1 ------------------------------
+   case T_DIVIDE:
+        if(proc->signal_handlers[SIGNUM] == SIGFPE)
+        {
+                signal_deliver(SIGFPE);
+        }
+
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){
@@ -109,3 +116,4 @@ trap(struct trapframe *tf)
   if(proc && proc->killed && (tf->cs&3) == DPL_USER)
     exit();
 }
+

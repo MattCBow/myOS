@@ -495,6 +495,19 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler, void *tra
 // the volatile registers (eax, ecx, edx) on the stack.
 void signal_deliver(int signum)
 {
+  // 1. Construct Signal Frame on process's call stack
+  proc->tf->esp - 4 = proc->tf->eip;
+  proc->tf->esp - 8 = proc->tf->eax;
+  proc->tf->esp - 12 = proc->tf->ecx;
+  proc->tf->esp - 16 = proc->tf->edx;
+  proc->tf->esp - 20 = proc->signal_handlers[signum];
+  proc->tf->esp - 24 = proc->signal_trampoline;
+  
+  // 2. Change the instruction pointer to the signal handler
+  proc->tf->esp = proc->signal_trampoline;
+
+  // 3. return control to the proccess 
+  sig_return();
 
 }
 
@@ -502,5 +515,15 @@ void signal_deliver(int signum)
 // registers (eax, ecx, edx).
 void signal_return(void)
 {
+  // Restore Volatile Registers
+  proc->tf->eax = ;
+  proc->tf->ecx = ;
+  proc->tf->edx = ;
+
+  // Restore eip to the excepting instruction
+  proc->tf->eip = ;
+
+  // Restore the stack pointer to its original value
+  proc->-tf->esp = proc->tf->signal_trampoline + 24; 
 
 }
