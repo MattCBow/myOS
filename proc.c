@@ -7,7 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
-//
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -491,25 +491,35 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler, void *tra
 
   return previous;
 }
-
 // This function must add the signal frame to the process stack, including saving
 // the volatile registers (eax, ecx, edx) on the stack.
 void signal_deliver(int signum)
 {
+
   // 1. Construct Signal Frame on process's call stack
-  proc->tf->esp - 4 = proc->tf->eip;
+  // Instruction where exception occurred 
+  proc->tf->eip = proc->tf->esp - 4;
+  // Save volatile register states 
+  proc->tf->eax = proc->tf->esp - 8;
+  proc->tf->ecx = proc->tf->esp - 12;
+  proc->tf->edx = proc->tf->esp - 16; 
+  //proc->signal_handlers[signum] = proc->tf->esp - 20;
+  // Update esp to point to the address of the trampoline (the orignal esp -24 bytes)
+  proc->tf->esp = proc->tf->esp - 24;
+  proc->signal_trampoline = &proc->tf->esp;		
+
+  /*proc->tf->esp - 4 = proc->tf->eip;
   proc->tf->esp - 8 = proc->tf->eax;
   proc->tf->esp - 12 = proc->tf->ecx;
   proc->tf->esp - 16 = proc->tf->edx;
   proc->tf->esp - 20 = proc->signal_handlers[signum];
-  proc->tf->esp - 24 = proc->signal_trampoline;
+  proc->tf->esp - 24 = proc->signal_trampoline;*/
   
   // 2. Change the instruction pointer to the signal handler
-  proc->tf->esp = proc->signal_trampoline;
+  //proc->tf->esp = proc->signal_trampoline;
 
   // 3. return control to the proccess 
-  sig_return();
-
+  //sig_return();
 }
 
 // This function must clean up the signal frame from the stack and restore the volatile
@@ -517,14 +527,14 @@ void signal_deliver(int signum)
 void signal_return(void)
 {
   // Restore Volatile Registers
-  proc->tf->eax = ;
-  proc->tf->ecx = ;
-  proc->tf->edx = ;
+  // proc->tf->eax = ;
+  // proc->tf->ecx = ;
+  // proc->tf->edx = ;
 
   // Restore eip to the excepting instruction
-  proc->tf->eip = ;
+  // proc->tf->eip = ;
 
   // Restore the stack pointer to its original value
-  proc->-tf->esp = proc->tf->signal_trampoline + 24; 
+  // proc->-tf->esp = proc->tf->signal_trampoline + 24; 
 
 }
