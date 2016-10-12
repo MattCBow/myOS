@@ -41,17 +41,12 @@ int main(void)
     uint saved_edx = 0;
 
     signal(SIGFPE, handle_signal);
-    
-    printf(1, "Running Test 1 %d\n", counter);    
+
     __asm__ ("movl $0x21,%eax\n\t");
-    printf(1, "Running Test 2 %d\n", counter);
     __asm__ ("movl $0x0,%ecx\n\t");
-    printf(1, "Running Test 3 %d\n", counter);
     __asm__ ("movl $0x8,%edx\n\t");
-    printf(1, "Running Test 4 %d\n", counter);
     __asm__ ("div %ecx");
-    printf(1, "Running Test 5 %d\n", counter);
-    
+
     saved_ecx = ecx;
     saved_eax = eax;
     saved_edx = edx;
@@ -66,6 +61,6 @@ int main(void)
         printf(1, "TEST PASSED\n");
     else
         printf(1, "TEST FAILED: weird case...\n");
-    printf(1, "Test Ran");
+
     exit();
 }
