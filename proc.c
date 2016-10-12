@@ -495,7 +495,7 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler, void *tra
 // the volatile registers (eax, ecx, edx) on the stack.
 void signal_deliver(int signum)
 {
-
+	cprintf("\n INSIDE SIGNAL_DELIVER \n");
   // 1. Construct Signal Frame on process's call stack
   // Instruction where exception occurred 
   proc->tf->eip = proc->tf->esp - 4;
