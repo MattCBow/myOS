@@ -509,7 +509,7 @@ void signal_deliver(int signum)
    proc->signal_trampoline = &proc->tf->esp;		
   
   // 2. Change the instruction pointer to the signal handler
-  //proc->tf->esp = proc->signal_trampoline;
+   proc->tf->eip = signal_register_handler;
 
   // 3. return control to the proccess 
   //sig_return();
