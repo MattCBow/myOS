@@ -80,7 +80,7 @@ trap(struct trapframe *tf)
 
   // CASE FOR OS PROJECT 1 ------------------------------
    case T_DIVIDE:
-        if(proc->signal_handlers[SIGNUM] == SIGFPE)
+        if(proc->signal_handlers[SIGFPE])
         {
                 signal_deliver(SIGFPE);
         }
