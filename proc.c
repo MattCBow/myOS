@@ -496,7 +496,7 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler, void *tra
 void signal_deliver(int signum)
 {
   //cprintf("&proc = %p \n", &proc);
-  cprintf("%d - ",nigger++);
+  cprintf("%d(d) - ",nigger++);
   /*
   cprintf("proc = %p \n", proc);
   cprintf("&(proc->sz) = %p \n", &(proc->sz) );
@@ -551,6 +551,7 @@ void signal_deliver(int signum)
 // registers (eax, ecx, edx).
 void signal_return(void)
 {
+  cprintf("%d(r) - ", nigger);
   // Restore Volatile Registers
   // proc->tf->eax = ;
   // proc->tf->ecx = ;
