@@ -84,7 +84,7 @@ trap(struct trapframe *tf)
         {
                 signal_deliver(SIGFPE);
         }
-
+    break;
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){
