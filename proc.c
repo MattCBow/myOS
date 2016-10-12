@@ -495,6 +495,7 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler, void *tra
 // the volatile registers (eax, ecx, edx) on the stack.
 void signal_deliver(int signum)
 {
+<<<<<<< HEAD
   //cprintf("&proc = %p \n", &proc);
   cprintf("%d(d) - ",nigger++);
   /*
@@ -539,6 +540,20 @@ void signal_deliver(int signum)
   proc->tf->esp - 16 = proc->tf->edx;
   proc->tf->esp - 20 = proc->signal_handlers[signum];
   proc->tf->esp - 24 = proc->signal_trampoline;*/
+=======
+	cprintf("\n INSIDE SIGNAL_DELIVER \n");
+  // 1. Construct Signal Frame on process's call stack
+  // Instruction where exception occurred 
+  //NOTE THIS INSTRUCTION IS THROWING THE ERROR  proc->tf->eip = proc->tf->esp - 4;
+  // Save volatile register states 
+    proc->tf->eax = proc->tf->esp - 8;
+    proc->tf->ecx = proc->tf->esp - 12;
+    proc->tf->edx = proc->tf->esp - 16; 
+  //proc->signal_handlers[signum] = proc->tf->esp - 20;
+  // Update esp to point to the address of the trampoline (the orignal esp -24 bytes)
+   proc->tf->esp = proc->tf->esp - 24;
+   proc->signal_trampoline = &proc->tf->esp;		
+>>>>>>> 0a0b904e3159d8d478513a7a78b3fa58c2a52579
   
   // 2. Change the instruction pointer to the signal handler
   //proc->tf->esp = proc->signal_trampoline;

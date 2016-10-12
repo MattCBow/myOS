@@ -83,8 +83,13 @@ trap(struct trapframe *tf)
         if(proc->signal_handlers[SIGFPE])
         {
                 signal_deliver(SIGFPE);
+		cprintf("HEY");
         }
+<<<<<<< HEAD
     break;
+=======
+	break;
+>>>>>>> 0a0b904e3159d8d478513a7a78b3fa58c2a52579
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){
