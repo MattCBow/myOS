@@ -26,15 +26,15 @@ int sys_sem_signal(void){
   return sem_signal(0);
 }
 
-int sys_clone(void *(*func) (void *), void *arg, void *stack){
+int sys_clone(void){
   return 0;
 }
 
-int sys_join(int pid, void **stack, void **retval){
+int sys_join(void){
   return 0;
 }
 
-void sys_texit(void *retval){
+int sys_texit(void){
   return 0;
 }
 //--------------------END----------------------
