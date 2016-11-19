@@ -7,140 +7,6 @@
 #include "proc.h"
 #include "spinlock.h"
 
-//---------------------------------------------
-//---------BOWYERS SEMAPHORE PROJECT-----------
-struct semaphore {
-  int value;
-  int active;
-  struct spinlock lock;
-} sem_tbl[32];
-
-void sem_tbl_init(){
-  int semId;
-  for(semId=0; semId<32; semId++){
-    sem_tbl[semId].value=0;
-    sem_tbl[semId].active=0;
-    initlock(&sem_tbl[semId].lock, "semlock");
-  }
-}
-
-int sem_init(int semId, int n){
-  if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==1)  return -1;
-  sem_tbl[semId].active = 1;
-  sem_tbl[semId].value = n;
-  return 0;
-}
-
-int sem_destroy(int semId){
-  if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==0) return -1;
-  sem_tbl[semId].active = 0;
-  sem_tbl[semId].value = 0;
-  return 0;
-}
-
-int sem_wait(int semId){
-  if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==0) return -1;
-  if(sem_tbl[semId].value<0) return -1;
-  acquire(&sem_tbl[semId].lock);
-  while(sem_tbl[semId].value==0) sleep(&sem_tbl[semId], &sem_tbl[semId].lock);
-  sem_tbl[semId].value--;
-  release(&sem_tbl[semId].lock);
-  return 0;
-}
-
-int sem_signal(int semId){
-  if(semId < 0 || semId > 31) return -1;
-  if(sem_tbl[semId].active==0) return -1;
-  if(sem_tbl[semId].value<0) return -1;
-  acquire(&sem_tbl[semId].lock);
-  sem_tbl[semId].value++;
-  if(sem_tbl[semId].value>0) wakeup(&sem_tbl[semId]);
-  release(&sem_tbl[semId].lock);
-  return 0;
-}
-
-int clone(void *(*func) (void *), void *arg, void *stack){
-  int i,pid;
-  struct proc *np;
-  if((np = allocproc()) == 0) return -1;
-  np->state = UNUSED;
-  np->sz = proc->sz;
-  np->parent = proc;
-  *np->tf = *proc->tf;
-  np->pgdir = proc->pgdir;
-  np->tf->eax = 0;
-  np->tf->eip = (int)func;
-  np->stack = (int)stack;
-  for(i = 0; i < NOFILE; i++){
-    if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
-  }
-  np->cwd = idup(proc->cwd);
-  np->tf->esp = (int)(stack+PGSIZE-4);
-  *((int*)(np->tf->esp)) = (int)arg;
-  *((int*)(np->tf->esp)-4) = 0xFFFFFFFF;
-  np->tf->esp =(np->tf->esp) -4;
-  safestrcpy(np->name, proc->name, sizeof(proc->name));
-  pid = np->pid;
-  acquire(&ptable.lock);
-  np->state = RUNNABLE;
-  release(&ptable.lock);
-  return pid;
-}
-
-int join(int pid, void **stack, void **retval){
-  struct proc *p;
-  acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if(p->pid != pid) continue;
-    else{
-      while(p->state != ZOMBIE) sleep(proc, &ptable.lock);
-      stack = (void **)p->stack;
-      *(int*)retval = p->tf->esp;
-      p->pid = 0;
-      p->parent = 0;
-      p->name[0] = 0;
-      p->killed = 0;
-      release(&ptable.lock);
-      return 0;
-    }
-  }
-  release(&ptable.lock);
-  return -1;
-}
-
-void texit(void *retval){
-  struct proc *p;
-  int fd;
-  if(proc == initproc) panic("init exiting");
-  for(fd = 0; fd < NOFILE; fd++){
-    if(proc->ofile[fd]){
-      fileclose(proc->ofile[fd]);
-      proc->ofile[fd] = 0;
-    }
-  }
-  begin_op();
-  iput(proc->cwd);
-  end_op();
-  proc->cwd = 0;
-  acquire(&ptable.lock);
-  wakeup1(proc->parent);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == proc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
-    }
-  }
-  *(int *)(proc->tf->esp) =*(int*)retval;
-  proc->state = ZOMBIE;
-  sched();
-  panic("zombie exit");
-}
-//--------------------END----------------------
-
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -597,3 +463,137 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+//---------------------------------------------
+//---------BOWYERS SEMAPHORE PROJECT-----------
+struct semaphore {
+  int value;
+  int active;
+  struct spinlock lock;
+} sem_tbl[32];
+
+void sem_tbl_init(){
+  int semId;
+  for(semId=0; semId<32; semId++){
+    sem_tbl[semId].value=0;
+    sem_tbl[semId].active=0;
+    initlock(&sem_tbl[semId].lock, "semlock");
+  }
+}
+
+int sem_init(int semId, int n){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==1)  return -1;
+  sem_tbl[semId].active = 1;
+  sem_tbl[semId].value = n;
+  return 0;
+}
+
+int sem_destroy(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  sem_tbl[semId].active = 0;
+  sem_tbl[semId].value = 0;
+  return 0;
+}
+
+int sem_wait(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  if(sem_tbl[semId].value<0) return -1;
+  acquire(&sem_tbl[semId].lock);
+  while(sem_tbl[semId].value==0) sleep(&sem_tbl[semId], &sem_tbl[semId].lock);
+  sem_tbl[semId].value--;
+  release(&sem_tbl[semId].lock);
+  return 0;
+}
+
+int sem_signal(int semId){
+  if(semId < 0 || semId > 31) return -1;
+  if(sem_tbl[semId].active==0) return -1;
+  if(sem_tbl[semId].value<0) return -1;
+  acquire(&sem_tbl[semId].lock);
+  sem_tbl[semId].value++;
+  if(sem_tbl[semId].value>0) wakeup(&sem_tbl[semId]);
+  release(&sem_tbl[semId].lock);
+  return 0;
+}
+
+int clone(void *(*func) (void *), void *arg, void *stack){
+  int i,pid;
+  struct proc *np;
+  if((np = allocproc()) == 0) return -1;
+  np->state = UNUSED;
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+  np->pgdir = proc->pgdir;
+  np->tf->eax = 0;
+  np->tf->eip = (int)func;
+  np->stack = (int)stack;
+  for(i = 0; i < NOFILE; i++){
+    if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
+  }
+  np->cwd = idup(proc->cwd);
+  np->tf->esp = (int)(stack+PGSIZE-4);
+  *((int*)(np->tf->esp)) = (int)arg;
+  *((int*)(np->tf->esp)-4) = 0xFFFFFFFF;
+  np->tf->esp =(np->tf->esp) -4;
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+  pid = np->pid;
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  return pid;
+}
+
+int join(int pid, void **stack, void **retval){
+  struct proc *p;
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->pid != pid) continue;
+    else{
+      while(p->state != ZOMBIE) sleep(proc, &ptable.lock);
+      stack = (void **)p->stack;
+      *(int*)retval = p->tf->esp;
+      p->pid = 0;
+      p->parent = 0;
+      p->name[0] = 0;
+      p->killed = 0;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+void texit(void *retval){
+  struct proc *p;
+  int fd;
+  if(proc == initproc) panic("init exiting");
+  for(fd = 0; fd < NOFILE; fd++){
+    if(proc->ofile[fd]){
+      fileclose(proc->ofile[fd]);
+      proc->ofile[fd] = 0;
+    }
+  }
+  begin_op();
+  iput(proc->cwd);
+  end_op();
+  proc->cwd = 0;
+  acquire(&ptable.lock);
+  wakeup1(proc->parent);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == proc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+  *(int *)(proc->tf->esp) =*(int*)retval;
+  proc->state = ZOMBIE;
+  sched();
+  panic("zombie exit");
+}
+//--------------------END----------------------
