@@ -72,7 +72,7 @@ int join(int pid, void **stack, void **retval){
 }
 
 void texit(void *retval){
-  return 0;
+  return;
 }
 //--------------------END----------------------
 
