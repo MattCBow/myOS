@@ -120,6 +120,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 
+void            sem_tbl_init(void);
 int             sem_init(int semId, int n);  //---------BOWYER+-----------
 int             sem_destroy(int semId);      //---------BOWYER+-----------
 int             sem_wait(int semId);         //---------BOWYER+-----------
