@@ -26,7 +26,7 @@ void sem_tbl_init(){
 }
 
 int sem_init(int semId, int n){
-  if(num < 0 || num > 31) return -1;
+  if(semId < 0 || semId > 31) return -1;
   if(sem_tbl[semId].active==1)  return -1;
   sem_tbl[semId].active = 1;
   sem_tbl[semId].value = n;
@@ -34,7 +34,7 @@ int sem_init(int semId, int n){
 }
 
 int sem_destroy(int semId){
-  if(num < 0 || num > 31) return -1;
+  if(semId < 0 || semId > 31) return -1;
   if(sem_tbl[semId].active==0) return -1;
   sem_tbl[semId].active = 0;
   sem_tbl[semId].value = 0;
@@ -42,7 +42,7 @@ int sem_destroy(int semId){
 }
 
 int sem_wait(int semId){
-  if(num < 0 || num > 31) return -1;
+  if(semId < 0 || semId > 31) return -1;
   if(sem_tbl[semId].active==0) return -1;
   if(sem_tbl[semId].value<0) return -1;
   acquire(&sem_tbl[semId].lock);
@@ -53,7 +53,7 @@ int sem_wait(int semId){
 }
 
 int sem_signal(int semId){
-  if(num < 0 || num > 31) return -1;
+  if(semId < 0 || semId > 31) return -1;
   if(sem_tbl[semId].active==0) return -1;
   if(sem_tbl[semId].value<0) return -1;
   acquire(&sem_tbl[semId].lock);
