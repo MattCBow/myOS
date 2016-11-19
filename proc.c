@@ -7,8 +7,8 @@
 #include "proc.h"
 #include "spinlock.h"
 
-///---------------------------------------------
-///---------BOWYERS SEMAPHORE PROJECT-----------
+//---------------------------------------------
+//---------BOWYERS SEMAPHORE PROJECT-----------
 struct semaphore
 {
   int value;
@@ -58,8 +58,7 @@ int sem_signal(int semId){
   release(&sem_tbl[semId].lock);
   return 0;
 }
-
-///--------------------END----------------------
+//--------------------END----------------------
 
 struct {
   struct spinlock lock;

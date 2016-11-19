@@ -7,6 +7,23 @@
 #include "mmu.h"
 #include "proc.h"
 
+
+//---------------------------------------------
+//---------BOWYERS SEMAPHORE PROJECT-----------
+int sys_sem_init(void){
+  return 0;
+}
+int sys_sem_destroy(void){
+  return 0;
+}
+int sys_sem_wait(void){
+  return 0;
+}
+int sys_sem_signal(void){
+  return 0;
+}
+//--------------------END----------------------
+
 int
 sys_fork(void)
 {
@@ -61,7 +78,7 @@ sys_sleep(void)
 {
   int n;
   uint ticks0;
-  
+
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -83,7 +100,7 @@ int
 sys_uptime(void)
 {
   uint xticks;
-  
+
   acquire(&tickslock);
   xticks = ticks;
   release(&tickslock);
