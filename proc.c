@@ -62,6 +62,18 @@ int sem_signal(int semId){
   release(&sem_tbl[semId].lock);
   return 0;
 }
+
+int clone(void *(*func) (void *), void *arg, void *stack){
+  return 0;
+}
+
+int join(int pid, void **stack, void **retval){
+  return 0;
+}
+
+void texit(void *retval){
+  return 0;
+}
 //--------------------END----------------------
 
 struct {

@@ -119,12 +119,18 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-
+//---------------------------------------------
+//---------BOWYERS SEMAPHORE PROJECT-----------
 void            sem_tbl_init(void);
-int             sem_init(int semId, int n);  //---------BOWYER+-----------
-int             sem_destroy(int semId);      //---------BOWYER+-----------
-int             sem_wait(int semId);         //---------BOWYER+-----------
-int             sem_signal(int semId);       //---------BOWYER+-----------
+int             sem_init(int semId, int n);
+int             sem_destroy(int semId);
+int             sem_wait(int semId);
+int             sem_signal(int semId);
+int             clone(void *(*func) (void *), void *arg, void *stack);
+int             join(int pid, void **stack, void **retval);
+void            texit(void *retval);
+//---------------------------------------------
+
 
 // swtch.S
 void            swtch(struct context**, struct context*);
