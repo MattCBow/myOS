@@ -17,10 +17,11 @@ struct semaphore
 } sem_tbl[32];
 
 void sem_tbl_init(){
-  for(int i=0;i<32;i++){
-    sem_tbl[i].value=0;
-    sem_tbl[i].active=0;
-    initlock(&sem_tbl[i].lock, "semlock");
+  int semId;
+  for(semId=0; semId<32; semId++){
+    sem_tbl[semId].value=0;
+    sem_tbl[semId].active=0;
+    initlock(&sem_tbl[semId].lock, "semlock");
   }
 }
 
