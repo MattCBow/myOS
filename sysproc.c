@@ -10,19 +10,22 @@
 
 //---------------------------------------------
 //---------BOWYERS SEMAPHORE PROJECT-----------
-/*
 int sys_sem_init(void){
-  return 0;
+  return sem_init(0, 1);
 }
+
 int sys_sem_destroy(void){
-  return 0;
+  return sem_destroy(0);
 }
+
 int sys_sem_wait(void){
-  return 0;
+  return sem_wait(0);
 }
+
 int sys_sem_signal(void){
-  return 0;
-}*/
+  return sem_signal(0);
+}
+
 //--------------------END----------------------
 
 int
