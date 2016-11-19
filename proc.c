@@ -16,7 +16,7 @@ struct semaphore
   struct spinlock lock;
 } sem_tbl[32];
 
-void sem_tbl_init(){}
+void sem_tbl_init(){
   for(int i=0;i<32;i++){
     sem_tbl[i].value=0;
     sem_tbl[i].active=0;
