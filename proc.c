@@ -90,7 +90,7 @@ int clone(void *(*func) (void *), void *arg, void *stack){
   return pid;
 }
 
-int join(int pid, void **stack, void *retval){
+int join(int pid, void **stack, void **retval){
   struct proc *p;
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
