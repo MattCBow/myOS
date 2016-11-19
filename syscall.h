@@ -21,3 +21,8 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_halt   22
+
+#define SYS_sem_init    23    //---------BOWYER+-----------
+#define SYS_sem_destroy 24    //---------BOWYER+-----------
+#define SYS_sem_wait    25    //---------BOWYER+-----------
+#define SYS_sem_signal  26    //---------BOWYER+-----------

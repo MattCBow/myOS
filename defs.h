@@ -8,6 +8,7 @@ struct rtcdate;
 struct spinlock;
 struct stat;
 struct superblock;
+struct semaphore;  //---------BOWYER+-----------
 
 // bio.c
 void            binit(void);
@@ -118,6 +119,11 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+
+int             sem_init(int semId, int n);  //---------BOWYER+-----------
+int             sem_destroy(int semId);      //---------BOWYER+-----------
+int             sem_wait(int semId);         //---------BOWYER+-----------
+int             sem_signal(int semId);       //---------BOWYER+-----------
 
 // swtch.S
 void            swtch(struct context**, struct context*);

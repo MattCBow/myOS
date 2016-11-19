@@ -55,7 +55,7 @@ int
 argptr(int n, char **pp, int size)
 {
   int i;
-  
+
   if(argint(n, &i) < 0)
     return -1;
   if((uint)i >= proc->sz || (uint)i+size > proc->sz)
@@ -99,6 +99,11 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_halt(void);
+
+extern int sys_sem_init(void);      //---------BOWYER+-----------
+extern int sys_sem_destroy(void);   //---------BOWYER+-----------
+extern int sys_sem_wait(void);      //---------BOWYER+-----------
+extern int sys_sem_signal(void);    //---------BOWYER+-----------
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
