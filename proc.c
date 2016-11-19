@@ -25,14 +25,14 @@ void sem_tbl_init(){
 }
 
 int sem_init(int semId, int n){
-  if(sem_tbl[semId]==1)  return -1;
+  if(sem_tbl[semId].active==1)  return -1;
   sem_tbl[semId].active = 1;
   sem_tbl[semId].value = n;
   return 0;
 }
 
 int sem_destroy(int semId){
-  if(sem_tbl[semId]==0) return -1;
+  if(sem_tbl[semId].active==0) return -1;
   sem_tbl[semId].active = 0;
   sem_tbl[semId].value = 0;
   return 0;
