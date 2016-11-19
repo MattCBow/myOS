@@ -32,7 +32,7 @@ struct semaphore
   int value;
   int active;
   struct spinlock lock;
-}
+};
 
 int sem_init(int semId, int n);
 int sem_destroy(int semId);
