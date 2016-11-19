@@ -25,27 +25,6 @@ int sleep(int);
 int uptime(void);
 int halt(void);
 
-///---------------------------------------------
-///---------BOWYERS SEMAPHORE PROJECT-----------
-struct semaphore
-{
-  int value;
-  int active;
-  struct spinlock lock;
-};
-
-int sem_init(int semId, int n);
-int sem_destroy(int semId);
-int sem_wait(int semId);
-int sem_signal(int semId);
-
-int clone(void *(*func) (void *), void *arg, void *stack);
-int join(int pid, void **stack, void **retval);
-void texit(void *retval);
-///--------------------END----------------------
-
-
-
 
 // ulib.c
 int stat(char*, struct stat*);

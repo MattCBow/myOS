@@ -9,7 +9,12 @@
 
 ///---------------------------------------------
 ///---------BOWYERS SEMAPHORE PROJECT-----------
-struct semaphore sys_sem[30];
+struct semaphore
+{
+  int value;
+  int active;
+  struct spinlock lock;
+} sys_sem[30];
 
 for(int i=0;i<30;i++){
   sys_sem[i].value=0;
