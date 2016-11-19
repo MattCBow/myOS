@@ -549,23 +549,42 @@ int clone(void *(*func) (void *), void *arg, void *stack){
 
 int join(int pid, void **stack, void **retval){
   struct proc *p;
+  int havekids, pid;
+
   acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if(p->pid != pid) continue;
-    else{
-      while(p->state != ZOMBIE) sleep(proc, &ptable.lock);
-      stack = (void **)p->stack;
-      *(int*)retval = p->tf->esp;
-      p->pid = 0;
-      p->parent = 0;
-      p->name[0] = 0;
-      p->killed = 0;
-      release(&ptable.lock);
-      return 0;
+  for(;;){
+    // Scan through table looking for zombie children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      // only wait for the child thread, but not the child process
+      if(p->parent != proc || p->isthread != 1)
+        continue;
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        return pid;
+      }
     }
+
+    // No point waiting if we don't have any children thread.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+    *(int*)stack = proc->stack;
   }
-  release(&ptable.lock);
-  return -1;
 }
 
 void texit(void *retval){
