@@ -10,150 +10,64 @@
 
 //---------------------------------------------
 //---------BOWYERS SEMAPHORE PROJECT-----------
-/*
+
 int sys_sem_init(void){
-  return sem_init(0, 1);
+  int semId,n;
+  if(argint(0, &semId) < 0) return -1;
+  if(argint(1, &n) < 0) return -1;
+  return sem_init(semId,n);
 }
 
 int sys_sem_destroy(void){
-  return sem_destroy(0);
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_destroy(semId);
 }
 
 int sys_sem_wait(void){
-  return sem_wait(0);
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_wait(semId);
 }
 
 int sys_sem_signal(void){
-  return sem_signal(0);
+  int semId;
+  if(argint(0,&semId) < 0) return -1;
+  return sem_signal(semId);
 }
 
 int sys_clone(void){
   void * arg0, *arg1,*stack;
-  int temp=0;
+  int temp;
+  if(argint(0, &temp) < 0) return -1;
   arg0 = (void *)temp;
-  temp=1;
+  if(argint(1, &temp) < 0) return -1;
   arg1 = (void *)temp;
-  temp=2;
+  if(argint(2, &temp) < 0) return -1;
   stack = (void *)temp;
   return clone(arg0,arg1,stack);
-}
-
-int sys_join(void){
-  void ** stack,**retval;
-  int pid=0,temp=1;
-  pid=0;
-  temp=1;
-  stack = (void **)temp;
-  temp=2;
-  retval = (void **)temp;
-  return join(pid,stack,retval);
 }
 
 int sys_texit(void){
   void *retval;
-  int temp=0;
+  int temp;
+  if(argint(0,&temp) < 0) return -1;
   retval = (void*)temp;
   texit(retval);
   return 0;
 }
-*/
 
-int sys_clone(void)
-{
-  void * arg0, *arg1,*stack;
-  int temp;
-  if(argint(0, &temp) < 0)
-    return -1;
-  arg0 = (void *)temp;
-
-  if(argint(1, &temp) < 0)
-    return -1;
-  arg1 = (void *)temp;
-
-  if(argint(2, &temp) < 0)
-    return -1;
-  stack = (void *)temp;
-
-  return clone(arg0,arg1,stack);
-}
-
-int sys_texit(void)
-{
-
-  void *retval;
-  int temp;
-
-  if(argint(0,&temp) < 0)
-    return -1;
-  retval = (void*)temp;
-
-  texit(retval);
-
-  return 0;
-}
-
-int sys_join(void)
-{
+int sys_join(void){
   void ** stack,**retval;
   int pid,temp;
-
-  if(argint(0,&pid) < 0)
-    return -1;
-
-  if(argint(1,&temp) < 0)
-    return -1;
+  if(argint(0,&pid) < 0) return -1;
+  if(argint(1,&temp) < 0) return -1;
   stack = (void **)temp;
-
-  if(argint(2,&temp) < 0)
-    return -1;
+  if(argint(2,&temp) < 0) return -1;
   retval = (void **)temp;
-
   return join(pid,stack,retval);
 }
 
-//semaphores
-
-int sys_sem_init(void)
-{
-  int semId,n;
-
-  if(argint(0, &semId) < 0)
-    return -1;
-
-  if(argint(1, &n) < 0)
-    return -1;
-
-  return sem_init(semId,n);
-}
-
-int sys_sem_destroy(void)
-{
-  int semId;
-
-  if(argint(0,&semId) < 0)
-    return -1;
-
-  return sem_destroy(semId);
-}
-int sys_sem_wait(void)
-{
-  int semId;
-
-  if(argint(0,&semId) < 0)
-    return -1;
-
-  return sem_wait(semId);
-}
-
-int sys_sem_signal(void)
-{
-  int semId;
-
-  if(argint(0,&semId) < 0)
-    return -1;
-
-  return sem_signal(semId);
-}
 //--------------------END----------------------
 
 int
