@@ -10,6 +10,7 @@
 
 //---------------------------------------------
 //---------BOWYERS SEMAPHORE PROJECT-----------
+/*
 int sys_sem_init(void){
   return 0;
 }
@@ -21,7 +22,7 @@ int sys_sem_wait(void){
 }
 int sys_sem_signal(void){
   return 0;
-}
+}*/
 //--------------------END----------------------
 
 int
