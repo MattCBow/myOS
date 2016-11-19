@@ -549,7 +549,7 @@ int clone(void *(*func) (void *), void *arg, void *stack){
 
 int join(int pid, void **stack, void **retval){
   struct proc *p;
-  int havekids, pid;
+  int havekids;
 
   acquire(&ptable.lock);
   for(;;){
@@ -557,7 +557,7 @@ int join(int pid, void **stack, void **retval){
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       // only wait for the child thread, but not the child process
-      if(p->parent != proc || p->isthread != 1)
+      if(p->parent != proc)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
