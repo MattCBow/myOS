@@ -120,7 +120,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 //---------------------------------------------
-//---------BOWYERS SEMAPHORE PROJECT-----------
+//------------------BOWYER+--------------------
 void            sem_tbl_init(void);
 int             sem_init(int semId, int n);
 int             sem_destroy(int semId);

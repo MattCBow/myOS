@@ -465,7 +465,7 @@ procdump(void)
 }
 
 //---------------------------------------------
-//---------BOWYERS SEMAPHORE PROJECT-----------
+//-------------------BOWYER+-------------------
 struct semaphore {
   int value;
   int active;
@@ -596,4 +596,4 @@ void texit(void *retval){
   sched();
   panic("zombie exit");
 }
-//--------------------END----------------------
+//---------------------------------------------

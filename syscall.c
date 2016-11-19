@@ -133,7 +133,8 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_halt]    sys_halt,
-
+//---------------------------------------------
+//-------------------BOWYER+-------------------
 [SYS_sem_init]    sys_sem_init,
 [SYS_sem_destroy] sys_sem_destroy,
 [SYS_sem_wait]    sys_sem_wait,
@@ -141,6 +142,7 @@ static int (*syscalls[])(void) = {
 [SYS_clone]       sys_clone,
 [SYS_join]        sys_join,
 [SYS_texit]       sys_texit,
+//---------------------------------------------
 };
 
 void

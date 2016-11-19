@@ -28,7 +28,7 @@ main(void)
   consoleinit();   // I/O devices & their interrupts
   uartinit();      // serial port
   pinit();         // process table
-  sem_tbl_init();  // semaphore table                  //---------BOWYER+-----------
+  sem_tbl_init();  // semaphore table                        //---------BOWYER+-----------
   tvinit();        // trap vectors
   binit();         // buffer cache
   fileinit();      // file table

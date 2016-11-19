@@ -31,6 +31,7 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(halt)
 
+/*---------------BOWYER+-------------------*/
 SYSCALL(sem_init)
 SYSCALL(sem_destroy)
 SYSCALL(sem_wait)
