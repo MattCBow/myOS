@@ -27,14 +27,32 @@ int sys_sem_signal(void){
 }
 
 int sys_clone(void){
-  return 0;
+  void * arg0, *arg1,*stack;
+  int temp=0;
+  arg0 = (void *)temp;
+  temp=1;
+  arg1 = (void *)temp;
+  temp=2;
+  stack = (void *)temp;
+  return clone(arg0,arg1,stack);
 }
 
 int sys_join(void){
-  return 0;
+  void ** stack,**retval;
+  int pid=0,temp=1;
+  pid=0;
+  temp=1;
+  stack = (void **)temp;
+  temp=2;
+  retval = (void **)temp;
+  return join(pid,stack,retval);
 }
 
 int sys_texit(void){
+  void *retval;
+  int temp=0;
+  retval = (void*)temp;
+  texit(retval);
   return 0;
 }
 //--------------------END----------------------
