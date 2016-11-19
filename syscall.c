@@ -129,9 +129,9 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_halt]    sys_halt,
 
-[SYS_sem_init]    SYS_sem_init,
-[SYS_sem_destroy] SYS_sem_destroy,
-[SYS_sem_wait]    SYS_sem_wait,
+[SYS_sem_init]    sys_sem_init,
+[SYS_sem_destroy] sys_sem_destroy,
+[SYS_sem_wait]    sys_sem_wait,
 [SYS_sem_signal]  sys_sem_signal,
 };
 
