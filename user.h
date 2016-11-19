@@ -25,6 +25,16 @@ int sleep(int);
 int uptime(void);
 int halt(void);
 
+///---------------------------------------------
+///---------BOWYERS SEMAPHORE PROJECT-----------
+int sem_init(int semId, int n);
+int sem_destroy(int semId);
+int sem_wait(int semId);
+int sem_signal(int semId);
+///--------------------END----------------------
+
+
+
 
 // ulib.c
 int stat(char*, struct stat*);
