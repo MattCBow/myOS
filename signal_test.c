@@ -5,7 +5,7 @@
 void handle_signal(int signum)
 {
     unsigned addr_signum = (unsigned) &signum;
-    unsigned addr_retaddr = addr_signum + 16;
+    unsigned addr_retaddr = addr_signum + 24; //--BOW--
     unsigned *retaddr = (unsigned*) addr_retaddr;
     printf(1, "addr_signum = %d\n", addr_signum);
     printf(1, "addr_retaddr = %d\n", addr_retaddr);
@@ -13,12 +13,12 @@ void handle_signal(int signum)
     *retaddr += 4;
 
     __asm__ ("movl $0x0,%ecx\n\t");
-} 
+}
 
 int main(void)
 {
     register int ecx asm ("%ecx");
-    
+
     signal(SIGFPE, handle_signal);         // register the actual signal for divide by zero.
 
     int x = 5;
