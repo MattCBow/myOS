@@ -457,6 +457,7 @@ int cowcopyuvm(void) {
     lcr3(v2p(proc->pgdir));
     return 1;
   }
+  return 0;
 }
 
 int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz) {
