@@ -105,10 +105,9 @@ trap(struct trapframe *tf)
         if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) {
             proc->actualsz = allocuvm(proc->pgdir, proc->actualsz, addr + 1);
             if (proc->actualsz == proc->sz) proc->actualsz = 0;
-        }
-        switchuvm(proc);
-        break;
-    }//--BOW-->>
+            switchuvm(proc);
+            break;
+        }//--BOW-->>
 
   //PAGEBREAK: 13
   default:
