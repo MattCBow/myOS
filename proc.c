@@ -55,11 +55,11 @@ found:
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
-  
+
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
-  
+
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
@@ -72,7 +72,10 @@ found:
 
   p->handlers[SIGKILL] = (sighandler_t) -1;
   p->handlers[SIGFPE] = (sighandler_t) -1;
+  p->handlers[SIGSEGV] = (sighandler_t) -1; //--BOW-->>
   p->restorer_addr = -1;
+  p->actualsz = 0;
+  p->shared = 0; //--BOW-->>
 
   return p;
 }
@@ -84,7 +87,7 @@ userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
-  
+
   p = allocproc();
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -112,7 +115,7 @@ int
 growproc(int n)
 {
   uint sz;
-  
+
   sz = proc->sz;
   if(n > 0){
     if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0)
@@ -122,6 +125,7 @@ growproc(int n)
       return -1;
   }
   proc->sz = sz;
+  proc->actualsz = sz; //--BOW-->>
   switchuvm(proc);
   return 0;
 }
@@ -159,14 +163,14 @@ fork(void)
   np->cwd = idup(proc->cwd);
 
   safestrcpy(np->name, proc->name, sizeof(proc->name));
- 
+
   pid = np->pid;
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
   np->state = RUNNABLE;
   release(&ptable.lock);
-  
+
   return pid;
 }
 
@@ -236,7 +240,13 @@ wait(void)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+        if (p->shared == 0) { //--BOW-->>
+          freevm(p->pgdir);
+        }
+        else {
+          cowfreevm(p->pgdir);
+          p->shared = 0;
+        } //--BOW-->
         p->state = UNUSED;
         p->pid = 0;
         p->parent = 0;
@@ -340,12 +350,12 @@ forkret(void)
 
   if (first) {
     // Some initialization functions must be run in the context
-    // of a regular process (e.g., they call sleep), and thus cannot 
+    // of a regular process (e.g., they call sleep), and thus cannot
     // be run from main().
     first = 0;
     initlog();
   }
-  
+
   // Return to "caller", actually trapret (see allocproc).
 }
 
@@ -450,7 +460,7 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-  
+
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -468,19 +478,20 @@ procdump(void)
   }
 }
 
-void signal_deliver(int signum)
+void signal_deliver(int signum, siginfo_t info)  //--BOW-->>
 {
-	uint old_eip = proc->tf->eip;
-
-	*((uint*)(proc->tf->esp - 4))  = (uint) old_eip;		// real return address
-	*((uint*)(proc->tf->esp - 8))  = proc->tf->eax;			// eax
-	*((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;			// ecx
-	*((uint*)(proc->tf->esp - 16)) = proc->tf->edx;			// edx
-	*((uint*)(proc->tf->esp - 20)) = (uint) signum;			// signal number
-	*((uint*)(proc->tf->esp - 24)) = proc->restorer_addr;	// address of restorer
-	proc->tf->esp -= 24;
-	proc->tf->eip = (uint) proc->handlers[signum];
-}
+  uint old_eip = proc->tf->eip;
+  *((uint*)(proc->tf->esp - 4))  = (uint) old_eip;
+  *((uint*)(proc->tf->esp - 8))  = proc->tf->eax;
+  *((uint*)(proc->tf->esp - 12)) = proc->tf->ecx;
+  *((uint*)(proc->tf->esp - 16)) = proc->tf->edx;
+  *((uint*)(proc->tf->esp - 20)) = info.type;
+  *((uint*)(proc->tf->esp - 24)) = info.addr;
+  *((uint*)(proc->tf->esp - 28)) = (uint) signum;
+  *((uint*)(proc->tf->esp - 32)) = proc->restorer_addr;
+  proc->tf->esp -= 32;
+  proc->tf->eip = (uint) proc->handlers[signum];
+} //--BOW-->>
 
 sighandler_t signal_register_handler(int signum, sighandler_t handler)
 {
@@ -493,3 +504,53 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler)
 
 	return previous;
 }
+
+int //--BOW-->>
+cowfork(void)
+{
+  int i, pid;
+  struct proc *np;
+  if((np = allocproc()) == 0)
+    return -1;
+  if((np->pgdir = cowmapuvm(proc->pgdir, proc->sz)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+  np->tf->eax = 0;
+  proc->shared = 1;
+  np->shared = 1;
+  for(i = 0; i < NOFILE; i++)
+    if(proc->ofile[i])
+      np->ofile[i] = filedup(proc->ofile[i]);
+  np->cwd = idup(proc->cwd);
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+  pid = np->pid;
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  return pid;
+}
+
+
+
+int
+dgrowproc(int n)
+{
+  uint sz;
+  sz = proc->sz;
+  if(n > 0){
+    if((sz = dchangesize(sz, sz + n)) == 0)
+      return -1;
+  }
+  else {
+    cprintf("Could not use dsbrk with inpositive size!\n");
+    return -1;
+  }
+  proc->sz = sz;
+  return 0;
+} //--BOW-->>
