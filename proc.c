@@ -9,7 +9,7 @@
 
 struct {
   struct spinlock lock;
-  struct proc proc[NPROC];
+  struct proc proc[n_proc];
 } ptable;
 
 static struct proc *initproc;
@@ -38,7 +38,7 @@ allocproc(void)
   char *sp;
 
   acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for(p = ptable.proc; p < &ptable.proc[n_proc]; p++)
     if(p->state == UNUSED)
       goto found;
   release(&ptable.lock);
@@ -205,7 +205,7 @@ exit(void)
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  for(p = ptable.proc; p < &ptable.proc[n_proc]; p++){
     if(p->parent == proc){
       p->parent = initproc;
       if(p->state == ZOMBIE)
@@ -231,7 +231,7 @@ wait(void)
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for(p = ptable.proc; p < &ptable.proc[n_proc]; p++){
       if(p->parent != proc)
         continue;
       havekids = 1;
@@ -287,7 +287,7 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for(p = ptable.proc; p < &ptable.proc[n_proc]; p++){
       if(p->state != RUNNABLE)
         continue;
 
@@ -404,7 +404,7 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for(p = ptable.proc; p < &ptable.proc[n_proc]; p++)
     if(p->state == SLEEPING && p->chan == chan)
       p->state = RUNNABLE;
 }
@@ -427,7 +427,7 @@ kill(int pid)
   struct proc *p;
 
   acquire(&ptable.lock);
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  for(p = ptable.proc; p < &ptable.proc[n_proc]; p++){
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
@@ -461,7 +461,7 @@ procdump(void)
   char *state;
   uint pc[10];
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+  for(p = ptable.proc; p < &ptable.proc[n_proc]; p++){
     if(p->state == UNUSED)
       continue;
     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
@@ -507,37 +507,37 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler)
 
 int cowfork(void) { //--BOW-->>
   int i, pid;
-  struct proc *np;
-  if((np = allocproc()) == 0) return -1;
-  if((np->pgdir = cowmapuvm(proc->pgdir, proc->sz)) == 0){
-    kfree(np->kstack);
-    np->kstack = 0;
-    np->state = UNUSED;
+  struct proc *n_proc;
+  if((n_proc = allocproc()) == 0) return -1;
+  if((n_proc->pgdir = cowmapuvm(proc->pgdir, proc->sz)) == 0){
+    kfree(n_proc->kstack);
+    n_proc->kstack = 0;
+    n_proc->state = UNUSED;
     return -1;
   }
-  np->sz = proc->sz;
-  np->parent = proc;
-  *np->tf = *proc->tf;
-  np->tf->eax = 0;
+  n_proc->sz = proc->sz;
+  n_proc->parent = proc;
+  *n_proc->tf = *proc->tf;
+  n_proc->tf->eax = 0;
   proc->shared = 1;
-  np->shared = 1;
-  for(i = 0; i < NOFILE; i++) if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
-  np->cwd = idup(proc->cwd);
-  safestrcpy(np->name, proc->name, sizeof(proc->name));
-  pid = np->pid;
+  n_proc->shared = 1;
+  for(i = 0; i < NOFILE; i++) if(proc->ofile[i]) n_proc->ofile[i] = filedup(proc->ofile[i]);
+  n_proc->cwd = idup(proc->cwd);
+  safestrcpy(n_proc->name, proc->name, sizeof(proc->name));
+  pid = n_proc->pid;
   acquire(&ptable.lock);
-  np->state = RUNNABLE;
+  n_proc->state = RUNNABLE;
   release(&ptable.lock);
   return pid;
 }
 
 int dgrowproc(int n) {
-  uint sz;
-  sz = proc->sz;
+  uint sz_unit;
+  sz_unit = proc->sz;
   if(n > 0) {
-      if((sz = dchangesize(sz, sz + n)) == 0) return -1;
+      if((sz_unit = dchangesize(sz_unit, sz_unit + n)) == 0) return -1;
   }
   else  return -1;
-  proc->sz = sz;
+  proc->sz = sz_unit;
   return 0;
 } //--BOW-->>

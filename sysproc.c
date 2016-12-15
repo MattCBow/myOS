@@ -132,14 +132,14 @@ int sys_signal_restorer(void)
 }
 
 int sys_mprotect(void) { //--BOW-->>
-  int addr;
-  int len;
-  int prot;
-  if (argint(0, &addr) < 0) return -1;
-  if (argint(1, &len) < 0) return -1;
-  if (argint(2, &prot) < 0) return -1;
-  if (prot > 0x003 || prot == 0x002) return -1;
-  return mprotect(addr, len, prot);
+  int temp_addr;
+  int temp_len;
+  int temp_prot;
+  if (argint(0, &temp_addr) < 0) return -1;
+  if (argint(1, &temp_len) < 0) return -1;
+  if (argint(2, &temp_prot) < 0) return -1;
+  if (temp_prot > 0x003 || temp_prot == 0x002) return -1;
+  return mprotect(temp_addr, temp_len, temp_prot);
 }
 
 int sys_cowfork(void) {
@@ -147,11 +147,11 @@ int sys_cowfork(void) {
 }
 
 int sys_dsbrk(void) {
-  int addr;
-  int n;
+  int ret_addr;
+  int in;
   if (proc->actualsz == 0) proc->actualsz = proc->sz;
-  if(argint(0, &n) < 0) return -1;
-  addr = proc->sz;
-  if(dgrowproc(n) < 0) return -1;
-  return addr;
+  if(argint(0, &in) < 0) return -1;
+  ret_addr = proc->sz;
+  if(dgrowproc(in) < 0) return -1;
+  return ret_addr;
 } //--BOW-->>
