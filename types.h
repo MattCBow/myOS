@@ -2,4 +2,4 @@ typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned char  uchar;
 typedef uint pde_t;
-//#include "signal.h" //--BOW--
+#include "signal.h" //--BOW--
