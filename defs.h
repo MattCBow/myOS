@@ -118,8 +118,8 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int             cowfork(void);      //---------------------------------------------Bowyer-----
-int             dgrowproc(int);     //---------------------------------------------Bowyer-----
+int             cowfork(void); //--BOW--
+int             dgrowproc(int); //--BOW--
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -180,13 +180,13 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-int             mprotect(int addr, int len, int prot);      //---------------------Bowyer---->
+int             mprotect(int addr, int len, int prot); //--BOW-->>
 pde_t*          cowmapuvm(pde_t*, uint);
 int             cowcopyuvm(void);
 void            sharetableinit(void);
 void            cowfreevm(pde_t*);
 int             dchangesize(uint, uint);
-int             dallocuvm(pde_t*, uint, uint);              //---------------------Bowyer-----^
+int             dallocuvm(pde_t*, uint, uint); //--BOW-->>
 
 
 // number of elements in fixed-size array
