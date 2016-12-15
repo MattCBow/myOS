@@ -510,8 +510,7 @@ cowfork(void)
 {
   int i, pid;
   struct proc *np;
-  if((np = allocproc()) == 0)
-    return -1;
+  if((np = allocproc()) == 0) return -1;
   if((np->pgdir = cowmapuvm(proc->pgdir, proc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
@@ -544,11 +543,9 @@ dgrowproc(int n)
   uint sz;
   sz = proc->sz;
   if(n > 0){
-    if((sz = dchangesize(sz, sz + n)) == 0)
-      return -1;
+    if((sz = dchangesize(sz, sz + n)) == 0) return -1;
   }
   else {
-    cprintf("Could not use dsbrk with inpositive size!\n");
     return -1;
   }
   proc->sz = sz;
