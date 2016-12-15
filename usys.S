@@ -32,3 +32,6 @@ SYSCALL(uptime)
 SYSCALL(halt)
 SYSCALL(signal_register)
 SYSCALL(signal_restorer)
+SYSCALL(mprotect) //--BOW-->>
+SYSCALL(cowfork)
+SYSCALL(dsbrk) //--BOW-->>
