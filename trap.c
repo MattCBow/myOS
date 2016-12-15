@@ -22,7 +22,7 @@ tvinit(void)
   for(i = 0; i < 256; i++)
     SETGATE(idt[i], 0, SEG_KCODE<<3, vectors[i], 0);
   SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
-  
+
   initlock(&tickslock, "time");
 }
 
@@ -77,12 +77,47 @@ trap(struct trapframe *tf)
             cpu->id, tf->cs, tf->eip);
     lapiceoi();
     break;
-   
-   case T_DIVIDE:
+
+    case T_DIVIDE: //--BOW-->>
       if (proc->handlers[SIGFPE] != (sighandler_t) -1) {
-        signal_deliver(SIGFPE);
+        siginfo_t info;
+        info.addr = 0;
+        info.type = 0;
+        signal_deliver(SIGFPE, info);
         break;
       }
+
+    case T_PGFLT:
+      if (proc->handlers[SIGSEGV] != (sighandler_t) -1) {
+        siginfo_t info;
+        info.addr = rcr2();
+        uint temp = tf->err;
+        if (temp >= 0x4) {
+          if (temp == 0x4 || temp == 0x6) {
+            info.type = PROT_NONE;
+          }
+          else if (temp == 0x7) {
+            info.type = PROT_READ;
+          }
+          else {
+            info.type = PROT_WRITE;
+          }
+          signal_deliver(SIGSEGV, info);
+          break;
+        }
+      }
+      if (proc->shared == 1 && cowcopyuvm() != 0) {
+        break;
+      }
+      uint addr = rcr2();
+      if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) {
+        proc->actualsz = allocuvm(proc->pgdir, proc->actualsz, addr + 1);
+        if (proc->actualsz == proc->sz) {
+          proc->actualsz = 0;
+        }
+        switchuvm(proc);
+        break;
+    } //--BOW-->>
 
   //PAGEBREAK: 13
   default:
@@ -101,7 +136,7 @@ trap(struct trapframe *tf)
   }
 
   // Force process exit if it has been killed and is in user space.
-  // (If it is still executing in the kernel, let it keep running 
+  // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
   if(proc && proc->killed && (tf->cs&3) == DPL_USER)
     exit();
