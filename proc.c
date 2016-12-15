@@ -534,7 +534,9 @@ int cowfork(void) { //--BOW-->>
 int dgrowproc(int n) {
   uint sz;
   sz = proc->sz;
-  if(n > 0) if((sz = dchangesize(sz, sz + n)) == 0) return -1;
+  if(n > 0) {
+      if((sz = dchangesize(sz, sz + n)) == 0) return -1;
+  }
   else  return -1;
   proc->sz = sz;
   return 0;
