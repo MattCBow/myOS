@@ -6,6 +6,8 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
+#include "spinlock.h" //--BOW--
+
 
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
@@ -33,7 +35,7 @@ seginit(void)
 
   lgdt(c->gdt, sizeof(c->gdt));
   loadgs(SEG_KCPU << 3);
-  
+
   // Initialize cpu-local storage.
   cpu = c;
   proc = 0;
@@ -57,7 +59,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
     // The permissions here are overly generous, but they can
-    // be further restricted by the permissions in the page table 
+    // be further restricted by the permissions in the page table
     // entries, if necessary.
     *pde = v2p(pgtab) | PTE_P | PTE_W | PTE_U;
   }
@@ -72,7 +74,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
   pte_t *pte;
-  
+
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
@@ -94,7 +96,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 // current process's page table during system calls and interrupts;
 // page protection bits prevent user code from using the kernel's
 // mappings.
-// 
+//
 // setupkvm() and exec() set up every page table like this:
 //
 //   0..KERNBASE: user memory (text+data+stack+heap), mapped to
@@ -102,7 +104,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 //   KERNBASE..KERNBASE+EXTMEM: mapped to 0..EXTMEM (for I/O space)
 //   KERNBASE+EXTMEM..data: mapped to EXTMEM..V2P(data)
 //                for the kernel's instructions and r/o data
-//   data..KERNBASE+PHYSTOP: mapped to V2P(data)..PHYSTOP, 
+//   data..KERNBASE+PHYSTOP: mapped to V2P(data)..PHYSTOP,
 //                                  rw data + free physical memory
 //   0xfe000000..0: mapped direct (devices such as ioapic)
 //
@@ -137,7 +139,7 @@ setupkvm(void)
   if (p2v(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
   for(k = kmap; k < &kmap[NELEM(kmap)]; k++)
-    if(mappages(pgdir, k->virt, k->phys_end - k->phys_start, 
+    if(mappages(pgdir, k->virt, k->phys_end - k->phys_start,
                 (uint)k->phys_start, k->perm) < 0)
       return 0;
   return pgdir;
@@ -182,7 +184,7 @@ void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
   char *mem;
-  
+
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
   mem = kalloc();
@@ -384,3 +386,180 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+int //--BOW-->>
+mprotect(addr, len, prot)
+{
+  pte_t *pte;
+  int i;
+  for (i  = 0; i < len; ++i) {
+    pte = walkpgdir(proc->pgdir, (void*) addr + i, 0);
+    *pte &= 0xFFFFFFFC;
+    *pte |= prot;
+  }
+  lcr3(v2p(proc->pgdir));
+  return 0;
+}
+
+
+
+
+struct entry
+{
+  int count;
+} shareTable[60 * 1024];
+struct spinlock tablelock;
+
+
+
+
+void
+sharetableinit(void)
+{
+  initlock(&tablelock, "sharetable");
+}
+
+
+
+
+pde_t*
+cowmapuvm(pde_t *pgdir, uint sz)
+{
+  pde_t *d;
+  pte_t *pte;
+  uint pa, i, flags;
+  int index;
+  if((d = setupkvm()) == 0)
+    return 0;
+  acquire(&tablelock);
+  for(i = 0; i < sz; i += PGSIZE){
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: page not present");
+    *pte &= ~PTE_W;
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
+      goto bad;
+    index = (pa >> 12) & 0xFFFFF;
+    if (shareTable[index].count == 0) {
+      shareTable[index].count = 2;
+    }
+    else {
+      ++shareTable[index].count;
+    }
+  }
+  release(&tablelock);
+  lcr3(v2p(proc->pgdir));
+  return d;
+bad:
+  freevm(d);
+  return 0;
+}
+
+
+
+
+int
+cowcopyuvm(void)
+{
+  uint pa;
+  int index;
+  uint addr;
+  pte_t *pte;
+  char *mem;
+  addr = rcr2();
+  pte = walkpgdir(proc->pgdir, (void *) addr, 0);
+  pa = PTE_ADDR(*pte);
+  index = (pa >> 12) & 0xFFFFF;
+  if (addr < proc->sz) {
+    acquire(&tablelock);
+    if (shareTable[index].count > 1) {
+      if((mem = kalloc()) == 0)
+        goto bad;
+      memmove(mem, (char*)p2v(pa), PGSIZE);
+      *pte &= 0xFFF;
+      *pte |= v2p(mem) | PTE_W;
+      --shareTable[index].count;
+    }
+    else {
+      *pte |= PTE_W;
+    }
+    release(&tablelock);
+    lcr3(v2p(proc->pgdir));
+    return 1;
+  }
+bad:
+  return 0;
+}
+
+
+
+
+int
+cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
+{
+  pte_t *pte;
+  uint a, pa;
+  int index;
+  if(newsz >= oldsz)
+    return oldsz;
+  a = PGROUNDUP(newsz);
+  acquire(&tablelock);
+  for(; a < oldsz; a += PGSIZE){
+    pte = walkpgdir(pgdir, (char*)a, 0);
+    if(!pte)
+      a += (NPTENTRIES - 1) * PGSIZE;
+    else if((*pte & PTE_P) != 0){
+      pa = PTE_ADDR(*pte);
+      index = (pa >> 12) & 0xFFFFF;
+      if(pa == 0)
+        panic("kfree");
+      if (shareTable[index].count > 1) {
+        --shareTable[index].count;
+      }
+      else {
+        char *v = p2v(pa);
+        kfree(v);
+        shareTable[index].count = 0;
+      }
+      *pte = 0;
+    }
+  }
+  release(&tablelock);
+  return newsz;
+}
+
+
+
+
+void
+cowfreevm(pde_t *pgdir)
+{
+  uint i;
+  if(pgdir == 0)
+    panic("freevm: no pgdir");
+  cowdeallocuvm(pgdir, KERNBASE, 0);
+  for(i = 0; i < NPDENTRIES; i++){
+    if(pgdir[i] & PTE_P){
+      char *v = p2v(PTE_ADDR(pgdir[i]));
+      kfree(v);
+    }
+  }
+  kfree((char*)pgdir);
+}
+
+
+
+int
+dchangesize(uint oldsz, uint newsz)
+{
+  uint a;
+  if(newsz >= KERNBASE)
+    return 0;
+  if(newsz < oldsz)
+    return oldsz;
+  a = PGROUNDUP(oldsz);
+  for(; a < newsz; a += PGSIZE){}
+  return newsz;
+} //--BOW-->>
