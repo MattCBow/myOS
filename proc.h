@@ -1,4 +1,4 @@
-#include "types.h" //--BOW--
+//#include "types.h" //--BOW--
 
 // Segments in proc->gdt.
 #define NSEGS     7
