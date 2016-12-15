@@ -472,7 +472,7 @@ int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz) {
     temp_pte = walkpgdir(pgdir, (char*)a, 0);
     if(!temp_pte) a += (NPTENTRIES - 1) * PGSIZE;
     else if((*temp_pte & PTE_P) != 0){
-      pa = PTE_ADDR(*pte);
+      pa = PTE_ADDR(*temp_pte);
       index = (pa >> 12) & 0xFFFFF;
       if(pa == 0) panic("kfree");
       if (shareTable[index].count > 1) --shareTable[index].count;
