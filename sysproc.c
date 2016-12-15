@@ -61,7 +61,7 @@ sys_sleep(void)
 {
   int n;
   uint ticks0;
-  
+
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -83,7 +83,7 @@ int
 sys_uptime(void)
 {
   uint xticks;
-  
+
   acquire(&tickslock);
   xticks = ticks;
   release(&tickslock);
@@ -127,6 +127,44 @@ int sys_signal_restorer(void)
       return -1;
 
     proc->restorer_addr = (uint) restorer_addr;
-    
+
     return 0;
 }
+
+int sys_mprotect(void) //--BOW-->>
+{
+  int addr;
+  int len;
+  int prot;
+  if (argint(0, &addr) < 0)
+    return -1;
+  if (argint(1, &len) < 0)
+    return -1;
+  if (argint(2, &prot) < 0)
+    return -1;
+  if (prot > 0x003 || prot == 0x002)
+    return -1;
+  return mprotect(addr, len, prot);
+}
+
+int
+sys_cowfork(void)
+{
+  return cowfork();
+}
+
+int
+sys_dsbrk(void)
+{
+  int addr;
+  int n;
+  if (proc->actualsz == 0) {
+    proc->actualsz = proc->sz;
+  }
+  if(argint(0, &n) < 0)
+    return -1;
+  addr = proc->sz;
+  if(dgrowproc(n) < 0)
+    return -1;
+  return addr;
+} //--BOW-->>
