@@ -1,4 +1,4 @@
-#include "signal.h"
+#include "types.h" //--BOW--
 
 // Segments in proc->gdt.
 #define NSEGS     7
@@ -12,7 +12,7 @@ struct cpu {
   volatile uint started;       // Has the CPU started?
   int ncli;                    // Depth of pushcli nesting.
   int intena;                  // Were interrupts enabled before pushcli?
-  
+
   // Cpu-local storage variables; see below
   struct cpu *cpu;
   struct proc *proc;           // The currently-running process.
@@ -68,8 +68,10 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  sighandler_t handlers[2];    // Signal handlers
+  sighandler_t handlers[15];   //--BOW-->>
   uint restorer_addr;          // Signal restorer
+  int shared;                  // shared flag
+  uint actualsz;               //--BOW-->>
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -78,5 +80,5 @@ struct proc {
 //   fixed-size stack
 //   expandable heap
 
-void signal_deliver(int signum);
+void signal_deliver(int signum, siginfo_t info); //--BOW--
 sighandler_t signal_register_handler(int signum, sighandler_t handler);
