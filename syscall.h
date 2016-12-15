@@ -23,3 +23,6 @@
 #define SYS_halt   22
 #define SYS_signal_register 23
 #define SYS_signal_restorer 24
+#define SYS_mprotect 25 //--BOW-->>
+#define SYS_cowfork 26
+#define SYS_dsbrk 27 //--BOW-->>
