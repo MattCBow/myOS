@@ -136,14 +136,10 @@ int sys_mprotect(void) //--BOW-->>
   int addr;
   int len;
   int prot;
-  if (argint(0, &addr) < 0)
-    return -1;
-  if (argint(1, &len) < 0)
-    return -1;
-  if (argint(2, &prot) < 0)
-    return -1;
-  if (prot > 0x003 || prot == 0x002)
-    return -1;
+  if (argint(0, &addr) < 0) return -1;
+  if (argint(1, &len) < 0) return -1;
+  if (argint(2, &prot) < 0) return -1;
+  if (prot > 0x003 || prot == 0x002) return -1;
   return mprotect(addr, len, prot);
 }
 
@@ -158,13 +154,9 @@ sys_dsbrk(void)
 {
   int addr;
   int n;
-  if (proc->actualsz == 0) {
-    proc->actualsz = proc->sz;
-  }
-  if(argint(0, &n) < 0)
-    return -1;
+  if (proc->actualsz == 0) proc->actualsz = proc->sz;
+  if(argint(0, &n) < 0) return -1;
   addr = proc->sz;
-  if(dgrowproc(n) < 0)
-    return -1;
+  if(dgrowproc(n) < 0) return -1;
   return addr;
 } //--BOW-->>

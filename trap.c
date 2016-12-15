@@ -88,32 +88,23 @@ trap(struct trapframe *tf)
       }
 
     case T_PGFLT:
-      if (proc->handlers[SIGSEGV] != (sighandler_t) -1) {
-        siginfo_t info;
-        info.addr = rcr2();
-        uint temp = tf->err;
-        if (temp >= 0x4) {
-          if (temp == 0x4 || temp == 0x6) {
-            info.type = PROT_NONE;
-          }
-          else if (temp == 0x7) {
-            info.type = PROT_READ;
-          }
-          else {
-            info.type = PROT_WRITE;
-          }
-          signal_deliver(SIGSEGV, info);
-          break;
+        if (proc->handlers[SIGSEGV] != (sighandler_t) -1) {
+            siginfo_t info;
+            info.addr = rcr2();
+            uint temp = tf->err;
+            if (temp >= 0x4) {
+                if (temp == 0x4 || temp == 0x6) info.type = PROT_NONE;
+                else if (temp == 0x7) info.type = PROT_READ;
+                else info.type = PROT_WRITE;
+                signal_deliver(SIGSEGV, info);
+                break;
+            }
         }
-      }
-      if (proc->shared == 1 && cowcopyuvm() != 0) {
-        break;
-      }
-      uint addr = rcr2();
-      if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) {
-        proc->actualsz = allocuvm(proc->pgdir, proc->actualsz, addr + 1);
-        if (proc->actualsz == proc->sz) {
-          proc->actualsz = 0;
+        if (proc->shared == 1 && cowcopyuvm() != 0) break;
+        uint addr = rcr2();
+        if (addr > tf->ebp && addr < proc->sz && proc->actualsz != proc->sz) {
+            proc->actualsz = allocuvm(proc->pgdir, proc->actualsz, addr + 1);
+            if (proc->actualsz == proc->sz) proc->actualsz = 0;
         }
         switchuvm(proc);
         break;
@@ -130,7 +121,7 @@ trap(struct trapframe *tf)
     // In user space, assume process misbehaved.
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
-            proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip, 
+            proc->pid, proc->name, tf->trapno, tf->err, cpu->id, tf->eip,
             rcr2());
     proc->killed = 1;
   }
