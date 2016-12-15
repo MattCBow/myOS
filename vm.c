@@ -420,7 +420,10 @@ pde_t* cowmapuvm(pde_t *pgdir, uint sz) {
     *temp_pte &= ~PTE_W;
     pa = PTE_ADDR(*temp_pte);
     flags = PTE_FLAGS(*temp_pte);
-    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0) goto bad;
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0){
+        freevm(d);
+        return 0;
+    }
     index = (pa >> 12) & 0xFFFFF;
     if (shareTable[index].count == 0) shareTable[index].count = 2;
     else ++shareTable[index].count;
@@ -428,9 +431,6 @@ pde_t* cowmapuvm(pde_t *pgdir, uint sz) {
   release(&tablelock);
   lcr3(v2p(proc->pgdir));
   return d;
-bad:
-  freevm(d);
-  return 0;
 }
 
 int cowcopyuvm(void) {
@@ -446,7 +446,7 @@ int cowcopyuvm(void) {
   if (addr < proc->sz) {
     acquire(&tablelock);
     if (shareTable[index].count > 1) {
-      if((mem = kalloc()) == 0) goto bad;
+      if((mem = kalloc()) == 0) return 0;
       memmove(mem, (char*)p2v(pa), PGSIZE);
       *temp_pte &= 0xFFF;
       *temp_pte |= v2p(mem) | PTE_W;
@@ -457,8 +457,6 @@ int cowcopyuvm(void) {
     lcr3(v2p(proc->pgdir));
     return 1;
   }
-bad:
-  return 0;
 }
 
 int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz) {
