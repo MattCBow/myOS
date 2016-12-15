@@ -79,13 +79,13 @@ trap(struct trapframe *tf)
     break;
 
     case T_DIVIDE: //--BOW-->>
-      if (proc->handlers[SIGFPE] != (sighandler_t) -1) {
-        siginfo_t info;
-        info.addr = 0;
-        info.type = 0;
-        signal_deliver(SIGFPE, info);
-        break;
-      }
+        if (proc->handlers[SIGFPE] != (sighandler_t) -1) {
+            siginfo_t info;
+            info.addr = 0;
+            info.type = 0;
+            signal_deliver(SIGFPE, info);
+            break;
+        }
 
     case T_PGFLT:
         if (proc->handlers[SIGSEGV] != (sighandler_t) -1) {
