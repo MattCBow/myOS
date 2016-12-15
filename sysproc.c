@@ -131,8 +131,7 @@ int sys_signal_restorer(void)
     return 0;
 }
 
-int sys_mprotect(void) //--BOW-->>
-{
+int sys_mprotect(void) { //--BOW-->>
   int addr;
   int len;
   int prot;
@@ -143,15 +142,11 @@ int sys_mprotect(void) //--BOW-->>
   return mprotect(addr, len, prot);
 }
 
-int
-sys_cowfork(void)
-{
+int sys_cowfork(void) {
   return cowfork();
 }
 
-int
-sys_dsbrk(void)
-{
+int sys_dsbrk(void) {
   int addr;
   int n;
   if (proc->actualsz == 0) proc->actualsz = proc->sz;

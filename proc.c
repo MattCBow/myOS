@@ -505,9 +505,7 @@ sighandler_t signal_register_handler(int signum, sighandler_t handler)
 	return previous;
 }
 
-int //--BOW-->>
-cowfork(void)
-{
+int cowfork(void) { //--BOW-->>
   int i, pid;
   struct proc *np;
   if((np = allocproc()) == 0) return -1;
@@ -523,9 +521,7 @@ cowfork(void)
   np->tf->eax = 0;
   proc->shared = 1;
   np->shared = 1;
-  for(i = 0; i < NOFILE; i++)
-    if(proc->ofile[i])
-      np->ofile[i] = filedup(proc->ofile[i]);
+  for(i = 0; i < NOFILE; i++) if(proc->ofile[i]) np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
   safestrcpy(np->name, proc->name, sizeof(proc->name));
   pid = np->pid;
@@ -535,19 +531,11 @@ cowfork(void)
   return pid;
 }
 
-
-
-int
-dgrowproc(int n)
-{
+int dgrowproc(int n) {
   uint sz;
   sz = proc->sz;
-  if(n > 0){
-    if((sz = dchangesize(sz, sz + n)) == 0) return -1;
-  }
-  else {
-    return -1;
-  }
+  if(n > 0) if((sz = dchangesize(sz, sz + n)) == 0) return -1;
+  else  return -1;
   proc->sz = sz;
   return 0;
 } //--BOW-->>

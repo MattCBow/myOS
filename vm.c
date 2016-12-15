@@ -386,9 +386,7 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
-int //--BOW-->>
-mprotect(addr, len, prot)
-{
+int mprotect(addr, len, prot) { //--BOW-->>
   pte_t *pte;
   int i;
   for (i  = 0; i < len; ++i) {
@@ -400,54 +398,32 @@ mprotect(addr, len, prot)
   return 0;
 }
 
-
-
-
-struct entry
-{
+struct entry {
   int count;
 } shareTable[60 * 1024];
 struct spinlock tablelock;
 
-
-
-
-void
-sharetableinit(void)
-{
+void sharetableinit(void) {
   initlock(&tablelock, "sharetable");
 }
 
-
-
-
-pde_t*
-cowmapuvm(pde_t *pgdir, uint sz)
-{
+pde_t* cowmapuvm(pde_t *pgdir, uint sz) {
   pde_t *d;
   pte_t *pte;
   uint pa, i, flags;
   int index;
-  if((d = setupkvm()) == 0)
-    return 0;
+  if((d = setupkvm()) == 0) return 0;
   acquire(&tablelock);
   for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
-    if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0) panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P)) panic("copyuvm: page not present");
     *pte &= ~PTE_W;
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
-    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0)
-      goto bad;
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0) goto bad;
     index = (pa >> 12) & 0xFFFFF;
-    if (shareTable[index].count == 0) {
-      shareTable[index].count = 2;
-    }
-    else {
-      ++shareTable[index].count;
-    }
+    if (shareTable[index].count == 0) shareTable[index].count = 2;
+    else ++shareTable[index].count;
   }
   release(&tablelock);
   lcr3(v2p(proc->pgdir));
@@ -457,12 +433,7 @@ bad:
   return 0;
 }
 
-
-
-
-int
-cowcopyuvm(void)
-{
+int cowcopyuvm(void) {
   uint pa;
   int index;
   uint addr;
@@ -475,16 +446,13 @@ cowcopyuvm(void)
   if (addr < proc->sz) {
     acquire(&tablelock);
     if (shareTable[index].count > 1) {
-      if((mem = kalloc()) == 0)
-        goto bad;
+      if((mem = kalloc()) == 0) goto bad;
       memmove(mem, (char*)p2v(pa), PGSIZE);
       *pte &= 0xFFF;
       *pte |= v2p(mem) | PTE_W;
       --shareTable[index].count;
     }
-    else {
-      *pte |= PTE_W;
-    }
+    else  *pte |= PTE_W;
     release(&tablelock);
     lcr3(v2p(proc->pgdir));
     return 1;
@@ -493,31 +461,21 @@ bad:
   return 0;
 }
 
-
-
-
-int
-cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
-{
+int cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz) {
   pte_t *pte;
   uint a, pa;
   int index;
-  if(newsz >= oldsz)
-    return oldsz;
+  if(newsz >= oldsz) return oldsz;
   a = PGROUNDUP(newsz);
   acquire(&tablelock);
   for(; a < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
-    if(!pte)
-      a += (NPTENTRIES - 1) * PGSIZE;
+    if(!pte) a += (NPTENTRIES - 1) * PGSIZE;
     else if((*pte & PTE_P) != 0){
       pa = PTE_ADDR(*pte);
       index = (pa >> 12) & 0xFFFFF;
-      if(pa == 0)
-        panic("kfree");
-      if (shareTable[index].count > 1) {
-        --shareTable[index].count;
-      }
+      if(pa == 0) panic("kfree");
+      if (shareTable[index].count > 1) --shareTable[index].count;
       else {
         char *v = p2v(pa);
         kfree(v);
@@ -530,15 +488,9 @@ cowdeallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   return newsz;
 }
 
-
-
-
-void
-cowfreevm(pde_t *pgdir)
-{
+void cowfreevm(pde_t *pgdir) {
   uint i;
-  if(pgdir == 0)
-    panic("freevm: no pgdir");
+  if(pgdir == 0) panic("freevm: no pgdir");
   cowdeallocuvm(pgdir, KERNBASE, 0);
   for(i = 0; i < NPDENTRIES; i++){
     if(pgdir[i] & PTE_P){
@@ -549,16 +501,10 @@ cowfreevm(pde_t *pgdir)
   kfree((char*)pgdir);
 }
 
-
-
-int
-dchangesize(uint oldsz, uint newsz)
-{
+int dchangesize(uint oldsz, uint newsz) {
   uint a;
-  if(newsz >= KERNBASE)
-    return 0;
-  if(newsz < oldsz)
-    return oldsz;
+  if(newsz >= KERNBASE)return 0;
+  if(newsz < oldsz)return oldsz;
   a = PGROUNDUP(oldsz);
   for(; a < newsz; a += PGSIZE){}
   return newsz;
