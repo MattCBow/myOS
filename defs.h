@@ -118,8 +118,8 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-void            cowfork(void);  //--BOW--
-void            dgrowproc(int); //--BOW--
+int             cowfork(void);      //---------------------------------------------Bowyer-----
+int             dgrowproc(int);     //---------------------------------------------Bowyer-----
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -180,13 +180,14 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-int             mprotect(int addr, int len, int prot); //--BOW-->>
+int             mprotect(int addr, int len, int prot);      //---------------------Bowyer---->
 pde_t*          cowmapuvm(pde_t*, uint);
 int             cowcopyuvm(void);
 void            sharetableinit(void);
 void            cowfreevm(pde_t*);
 int             dchangesize(uint, uint);
-int             dallocuvm(pde_t*, uint, uint); //--BOW-->>
+int             dallocuvm(pde_t*, uint, uint);              //---------------------Bowyer-----^
+
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
