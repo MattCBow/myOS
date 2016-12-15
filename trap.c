@@ -108,7 +108,7 @@ trap(struct trapframe *tf)
         }
         switchuvm(proc);
         break;
-    } //--BOW-->>
+    }//--BOW-->>
 
   //PAGEBREAK: 13
   default:
